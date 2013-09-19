@@ -11,7 +11,6 @@
     },
     "license" : "mit",
     "directories.lib": "lib/",
-    "directories.example": "example/",
     "repository" :{
         "type" : "git",
         "url" : "http://github.com/maboiteaspam/phantomizer-libutil.git"
