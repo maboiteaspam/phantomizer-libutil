@@ -1,26 +1,25 @@
 {
     "name": "phantomizer-libutil",
-    "version": "0.1.2",
+    "version": "0.1.1",
     "private": true,
     "description": "Nodejs utilities library",
     "keywords": "",
     "bugs": {
-        "url" : "http://github.com/maboiteaspam/phantomizer-libutil/issues",
-        "email" : "none@host.com"
+        "url": "http://github.com/maboiteaspam/phantomizer-libutil/issues",
+        "email": "none@host.com"
     },
-    "license" : "mit",
+    "license": "mit",
     "directories.lib": "lib/",
-    "repository" :{
-        "type" : "git",
-        "url" : "http://github.com/maboiteaspam/phantomizer-libutil.git"
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/maboiteaspam/phantomizer-libutil.git"
     },
     "main": "lib/main",
     "dependencies": {
-        "grunt":"0.4.x",
-        "ejs":"0.8.x",
-        "underscore":"1.5.x",
+        "grunt": "0.4.x",
+        "ejs": "0.8.x",
+        "underscore": "1.5.x",
         "phantomizer-websupport": "maboiteaspam/phantomizer-websupport"
     },
-    "devDependencies": {
-    }
+    "devDependencies": {}
 }
