@@ -17,9 +17,7 @@
     "main": "lib/main",
     "dependencies": {
         "grunt": "0.4.x",
-        "ejs": "0.8.x",
-        "underscore": "1.5.x",
-        "phantomizer-websupport": "maboiteaspam/phantomizer-websupport"
+        "underscore": "1.5.x"
     },
     "devDependencies": {}
 }
