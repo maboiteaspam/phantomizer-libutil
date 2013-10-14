@@ -17,7 +17,8 @@
     "main": "lib/main",
     "dependencies": {
         "grunt": "0.4.x",
-        "underscore": "1.5.x"
+        "underscore": "1.5.x",
+        "phantomizer-html-dirlisting": "git://github.com/maboiteaspam/phantomizer-html-dirlisting.git"
     },
     "devDependencies": {}
 }
