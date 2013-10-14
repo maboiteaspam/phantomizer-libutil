@@ -2,7 +2,7 @@
     "name": "phantomizer-libutil",
     "version": "0.1.14",
     "private": true,
-    "description": "Phantomizer Nodejs utilities library test",
+    "description": "Phantomizer Nodejs utilities library",
     "keywords": "",
     "bugs": {
         "url": "http://github.com/maboiteaspam/phantomizer-libutil/issues",
