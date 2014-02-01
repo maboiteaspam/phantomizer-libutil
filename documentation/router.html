@@ -59,6 +59,7 @@ there are exclusive</p>
         
           <div class='highlight'><pre>                template:<span class="hljs-string">""</span>,
                 urls_datasource:<span class="hljs-string">""</span>,
+                datasource_credentials:<span class="hljs-string">""</span>,
                 urls_file:<span class="hljs-string">""</span>,
                 url:<span class="hljs-string">""</span>,</pre></div>
         
@@ -191,7 +192,7 @@ once it is loaded</p>
         
           <div class='highlight'><pre>        <span class="hljs-keyword">if</span> (route_options.urls_datasource){
             grunt.log.writeln(<span class="hljs-string">"Reading urls from URL "</span>+route_options.urls_datasource);
-            read_url(route_options.urls_datasource, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(status,content)</span>{</span>
+            read_url(route_options, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(status,content)</span>{</span>
                 urls = <span class="hljs-built_in">JSON</span>.parse(content);</pre></div>
         
       
@@ -248,12 +249,56 @@ once it is loaded</p>
      * Reads a remote url
      * and apply callback when done
      *
-     * @param url string
+     * @param route Route
      * @param then callback
      */</span>
-    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">read_url</span><span class="hljs-params">(url,then)</span>{</span>
-        <span class="hljs-keyword">var</span> request = <span class="hljs-built_in">require</span>(<span class="hljs-string">"request"</span>)
-        request(url, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(error, response, body)</span> {</span>
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">read_url</span><span class="hljs-params">(route,then)</span>{</span>
+        <span class="hljs-keyword">var</span> request = <span class="hljs-built_in">require</span>(<span class="hljs-string">"request"</span>);
+
+        <span class="hljs-keyword">var</span> url = route.urls_datasource;
+        <span class="hljs-keyword">var</span> options = {};
+        <span class="hljs-keyword">if</span>( route.datasource_credentials ){
+
+            <span class="hljs-keyword">var</span> auth_file = route.datasource_credentials.auth_file || <span class="hljs-string">""</span>;
+            <span class="hljs-keyword">var</span> user_env_var = route.datasource_credentials.user_env_var || <span class="hljs-string">""</span>;
+            <span class="hljs-keyword">var</span> pwd_env_var = route.datasource_credentials.pwd_env_var || <span class="hljs-string">""</span>;
+            <span class="hljs-keyword">var</span> user_in = route.datasource_credentials.user || <span class="hljs-string">""</span>;
+            <span class="hljs-keyword">var</span> pwd_in = route.datasource_credentials.pwd || <span class="hljs-string">""</span>;
+
+            <span class="hljs-keyword">if</span>( auth_file !== <span class="hljs-string">""</span> ){
+                console.log(<span class="hljs-string">"using auth_file "</span> + auth_file);
+                <span class="hljs-keyword">var</span> c = grunt.file.read(auth_file).trim().split(<span class="hljs-string">":"</span>);
+                options = {
+                    auth:{
+                        <span class="hljs-string">'user'</span>: c[<span class="hljs-number">0</span>],
+                        <span class="hljs-string">'pass'</span>: c[<span class="hljs-number">1</span>],
+                        <span class="hljs-string">'sendImmediately'</span>: <span class="hljs-literal">false</span>
+                    }
+                };
+            }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( user_env_var
+                +pwd_env_var !== <span class="hljs-string">""</span> ){
+                console.log(<span class="hljs-string">"using env var auth "</span> + user_env_var+<span class="hljs-string">" "</span>+pwd_env_var);
+                options = {
+                    auth:{
+                        <span class="hljs-string">'user'</span>: process.env[user_env_var],
+                        <span class="hljs-string">'pass'</span>: process.env[pwd_env_var],
+                        <span class="hljs-string">'sendImmediately'</span>: <span class="hljs-literal">false</span>
+                    }
+                };
+            }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( user_in
+                +pwd_in !== <span class="hljs-string">""</span> ){
+                console.log(<span class="hljs-string">"using inlined configuration auth."</span>);
+                options = {
+                    auth:{
+                        <span class="hljs-string">'user'</span>: user_in,
+                        <span class="hljs-string">'pass'</span>: pwd_in,
+                        <span class="hljs-string">'sendImmediately'</span>: <span class="hljs-literal">false</span>
+                    }
+                };
+            }
+        }
+
+        request(url, options, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(error, response, body)</span> {</span>
             <span class="hljs-keyword">if</span>( error ){
                 then(<span class="hljs-literal">false</span>,error);
             }<span class="hljs-keyword">else</span>{</pre></div>
