@@ -1,0 +1,33 @@
+{
+    "name": "phantomizer-libutil",
+    "version": "0.1.31",
+    "private": true,
+    "description": "Phantomizer Nodejs utilities library",
+    "keywords": "",
+    "bugs": {
+        "url": "http://github.com/maboiteaspam/phantomizer-libutil/issues",
+        "email": "none@host.com"
+    },
+    "license": "mit",
+    "directories.lib": "lib/",
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/maboiteaspam/phantomizer-libutil.git"
+    },
+    "main": "lib/main",
+    "dependencies": {
+        "grunt": "0.4.x",
+        "connect": "2.x.x",
+        "lodash": "0.9.x",
+        "underscore": "1.5.x",
+        "phantomizer-html-dirlisting": "git://github.com/maboiteaspam/phantomizer-html-dirlisting.git",
+        "request": "~2.33.0"
+    },
+    "devDependencies": {
+        "docco": "jashkenas/docco",
+        "grunt-docco": "DavidSouther/grunt-docco",
+        "grunt-gh-pages": "~0.9.0",
+        "wrench": "~1.5.6",
+        "grunt-release": "geddski/grunt-release"
+    }
+}
