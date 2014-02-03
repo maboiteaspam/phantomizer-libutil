@@ -6,7 +6,8 @@ module.exports = function(grunt) {
         docco: {
             debug: {
                 src: [
-                    'lib/router.js'
+                    'lib/router.js',
+                    'lib/webserver.js'
                 ],
                 options: {
                     layout:'linear',
