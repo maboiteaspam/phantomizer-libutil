@@ -86,11 +86,20 @@
         <p>HTML Document injection and manipulation</p>
 
         
-          <div class='highlight'><pre>    <span class="hljs-keyword">var</span> is_phantomizing = <span class="hljs-literal">false</span>;
+          <div class='highlight'><pre>    <span class="hljs-keyword">var</span> is_phantom = <span class="hljs-literal">false</span>;
+    <span class="hljs-keyword">var</span> is_in_build_process = <span class="hljs-literal">false</span>;
     <span class="hljs-keyword">var</span> dashboard_enabled = <span class="hljs-literal">true</span>;
     <span class="hljs-keyword">var</span> build_enabled = <span class="hljs-literal">true</span>;
     <span class="hljs-keyword">var</span> assets_injection_enabled = <span class="hljs-literal">true</span>;
     <span class="hljs-keyword">var</span> globals_injected = <span class="hljs-literal">null</span>;</pre></div>
+        
+      
+        
+        <p>logs the query that was identified as a file</p>
+
+        
+          <div class='highlight'><pre>    <span class="hljs-keyword">var</span> log_query = <span class="hljs-literal">false</span>;
+    <span class="hljs-keyword">var</span> query_logged = [];</pre></div>
         
       
         
@@ -524,7 +533,8 @@ ensure the build cache is empty</p>
         
           <div class='highlight'><pre>            grunt.log.ok(<span class="hljs-string">"is_built and is_fresh"</span>,request_path);
             optimizer.read_fresh_build(tgt_build_profile, request_path, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(path, buf)</span>{</span>
-              buf = inject_extras(req, buf);
+              buf = inject_extras(req, buf, is_phantom);
+              <span class="hljs-keyword">if</span>( log_query ) query_logged[request_path] = path;
               respond(<span class="hljs-number">200</span>, headers, buf, res);
             })
           }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(is_already_build){</pre></div>
@@ -536,7 +546,8 @@ ensure the build cache is empty</p>
         
           <div class='highlight'><pre>            grunt.verbose.ok(<span class="hljs-string">"is_built and is_not_fresh"</span>,request_path);
             optimizer.regen_build(tgt_build_profile, request_path, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(path, buf)</span>{</span>
-              buf = inject_extras(req, buf);
+              buf = inject_extras(req, buf, is_phantom);
+              <span class="hljs-keyword">if</span>( log_query ) query_logged[request_path] = path;
               respond(<span class="hljs-number">200</span>, headers, buf, res);
             });
           }<span class="hljs-keyword">else</span>{</pre></div>
@@ -548,7 +559,8 @@ ensure the build cache is empty</p>
         
           <div class='highlight'><pre>            grunt.verbose.ok(<span class="hljs-string">"is_not_built and is_not_fresh"</span>,request_path);
             optimizer.do_build(tgt_build_profile, request_path, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(path, buf)</span>{</span>
-              buf = inject_extras(req, buf);
+              buf = inject_extras(req, buf, is_phantom);
+              <span class="hljs-keyword">if</span>( log_query ) query_logged[request_path] = path;
               respond(<span class="hljs-number">200</span>, headers, buf, res);
             });
           }
@@ -611,7 +623,23 @@ ensure the build cache is empty</p>
           }
         }
         buf = phantomizer_helper.inject_requirejs(requirejs_baseUrl, requirejs_src, requirejs_paths, buf, <span class="hljs-literal">null</span>);
-        buf = inject_extras(req, buf);
+        buf = inject_extras(req, buf, is_phantom);</pre></div>
+        
+      
+        
+        <p>if the build occurs,
+add the stryke variable
+to tell webclient to stop display sooner</p>
+
+        
+          <div class='highlight'><pre>        <span class="hljs-keyword">if</span>( is_in_build_process ){
+          <span class="hljs-keyword">var</span> stryke = <span class="hljs-string">""</span>;
+          stryke = stryke+<span class="hljs-string">"&lt;script&gt;"</span>;
+          stryke = stryke+    <span class="hljs-string">"var phantomatic = true;"</span>;
+          stryke = stryke+<span class="hljs-string">"&lt;/script&gt;"</span>;
+          buf = buf.replace(<span class="hljs-string">"&lt;/head&gt;"</span>, stryke+<span class="hljs-string">"&lt;/head&gt;"</span>);
+        }
+        <span class="hljs-keyword">if</span>( log_query ) query_logged[request_path] = file;
         respond(<span class="hljs-number">200</span>, headers, buf, res);
       }<span class="hljs-keyword">else</span>{
         next();
@@ -656,6 +684,7 @@ ensure the build cache is empty</p>
             }
           }
           file = file_utils.find_file([user_config.out_dir], request_path); <span class="hljs-comment">// we must look up again</span>
+          <span class="hljs-keyword">if</span>( log_query ) query_logged[request_path] = file;
           respond(<span class="hljs-number">200</span>, headers, fs.readFileSync(file), res);
         }<span class="hljs-keyword">else</span>{
           next();
@@ -815,12 +844,26 @@ ensure the build cache is empty</p>
      *
      * @param is_phantom
      */</span>
-    <span class="hljs-keyword">this</span>.is_phantom = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( is_phantom )</span>{</span>
-      is_phantomizing = is_phantom;
+    <span class="hljs-keyword">this</span>.is_phantom = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( is )</span>{</span>
+      is_phantom = is;
     };
 
     <span class="hljs-comment">/**
      * Instructs the web server
+     *  to inject is_phantomizing=true; variable
+     *
+     *  it tells the build process occurs
+     *
+     * @param is_in_build_process
+     */</span>
+    <span class="hljs-keyword">this</span>.is_in_build_process = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">( is )</span>{</span>
+      is_in_build_process = is;
+    };
+
+    <span class="hljs-comment">/**
+     * Instructs the web server
+     *  to enabled the dashboard
+     *  could still be overridden by GET variable
      *
      * @param enabled
      */</span>
@@ -830,7 +873,7 @@ ensure the build cache is empty</p>
 
     <span class="hljs-comment">/**
      * Instructs the web server
-     *  to add gloals to the DOM
+     *  to add globals to the DOM
      *
      * @param injected_var
      */</span>
@@ -856,6 +899,29 @@ ensure the build cache is empty</p>
      */</span>
     <span class="hljs-keyword">this</span>.enable_assets_inject = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(enabled)</span>{</span>
       assets_injection_enabled = !!enabled;
+    };
+
+
+
+    <span class="hljs-comment">/**
+     * Instructs the web server
+     *  to logs queries that was identified as real files
+     *
+     * @param enabled
+     */</span>
+    <span class="hljs-keyword">this</span>.enable_query_logs = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(enabled)</span>{</span>
+      log_query = !!enabled;
+    };
+    <span class="hljs-keyword">this</span>.clear_query_logs = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span>{</span>
+      query_logged = [];
+    };
+    <span class="hljs-comment">/**
+     * Returns an query_logged
+     *  [ request ] =&gt; file_path
+     * @returns {Array}
+     */</span>
+    <span class="hljs-keyword">this</span>.get_query_logs = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span>{</span>
+      <span class="hljs-keyword">return</span> query_logged;
     };</pre></div>
         
       
@@ -903,18 +969,18 @@ ensure the build cache is empty</p>
         <p>inject extra html content within routed request</p>
 
         
-          <div class='highlight'><pre>    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">inject_extras</span><span class="hljs-params">(req,buf)</span>{</span>
+          <div class='highlight'><pre>    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">inject_extras</span><span class="hljs-params">(req,buf, is_phantom)</span>{</span>
 
       buf = phantomizer_helper.inject_requirejs(requirejs_baseUrl, requirejs_src, requirejs_paths, buf, <span class="hljs-literal">null</span>);
 
-      <span class="hljs-keyword">if</span>( is_phantomizing ){
+      <span class="hljs-keyword">if</span>( is_phantom ){
         buf = phantomizer_helper.inject_phantom(buf);
       }
 
       <span class="hljs-keyword">var</span> inject = <span class="hljs-literal">false</span>;
       <span class="hljs-keyword">if</span>( (req.query.device || req.query.spec_files) ){
         inject = <span class="hljs-literal">true</span>;
-      }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( !req.query.no_dashboard ){
+      }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( !req.query.no_dashboard &amp;&amp; dashboard_enabled ){
         inject = <span class="hljs-literal">true</span>;
       }
 
