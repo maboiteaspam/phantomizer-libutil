@@ -17,11 +17,11 @@
   "main": "lib/main",
   "dependencies": {
     "grunt": "0.4.x",
-    "connect": "2.x.x",
     "lodash": "0.9.x",
     "underscore": "1.5.x",
     "phantomizer-html-dirlisting": "git://github.com/maboiteaspam/phantomizer-html-dirlisting.git",
-    "request": "~2.33.0"
+    "request": "~2.33.0",
+    "express": "~3.4.8"
   },
   "devDependencies": {
     "docco": "jashkenas/docco",
