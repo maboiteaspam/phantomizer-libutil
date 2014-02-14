@@ -1,6 +1,6 @@
 {
   "name": "phantomizer-libutil",
-  "version": "0.1.36",
+  "version": "0.1.41",
   "private": true,
   "description": "Phantomizer Nodejs utilities library",
   "keywords": "",
