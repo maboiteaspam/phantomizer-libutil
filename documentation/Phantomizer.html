@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Phantomizer.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="public/stylesheets/normalize.css" />
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="page">
+
+      <div class="header">
+        
+          <h1>Phantomizer.js</h1>
+        
+
+        
+          <div class="toc">
+            <h3>Table of Contents</h3>
+            <ol>
+              
+                
+                <li>
+                  <a class="source" href="Phantomizer.html">
+                    Phantomizer.js
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="router.html">
+                    router.js
+                  </a>
+                </li>
+              
+                
+                <li>
+                  <a class="source" href="webserver.html">
+                    webserver.js
+                  </a>
+                </li>
+              
+            </ol>
+          </div>
+        
+      </div>
+
+      
+        
+        
+        
+          <div class='highlight'><pre>module.exports = exports = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(cwd,grunt)</span> {</span>
+<span class="hljs-pi">
+  'use strict'</span>;</pre></div>
+        
+      
+        
+        <p>initialize some helpers</p>
+
+        
+          <div class='highlight'><pre>  <span class="hljs-keyword">var</span> router_factory = <span class="hljs-built_in">require</span>(<span class="hljs-string">"./router.js"</span>).router;
+  <span class="hljs-keyword">var</span> optimizer_factory = <span class="hljs-built_in">require</span>(<span class="hljs-string">"./optimizer.js"</span>).optimizer;
+  <span class="hljs-keyword">var</span> meta_factory = <span class="hljs-built_in">require</span>(<span class="hljs-string">"./meta.js"</span>).meta;
+  <span class="hljs-keyword">var</span> webserver_factory = <span class="hljs-built_in">require</span>(<span class="hljs-string">"./webserver.js"</span>).webserver;
+
+  <span class="hljs-keyword">var</span> that = <span class="hljs-keyword">this</span>;
+
+
+  <span class="hljs-keyword">var</span> meta_manager = <span class="hljs-literal">null</span>;
+  <span class="hljs-keyword">var</span> optimizer = <span class="hljs-literal">null</span>;
+  <span class="hljs-keyword">var</span> router = <span class="hljs-literal">null</span>;
+
+  that.get_version = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span>{</span>
+    <span class="hljs-keyword">var</span> pkg = grunt.file.read(cwd+<span class="hljs-string">"/package.json"</span>, <span class="hljs-string">'utf-8'</span>);
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">JSON</span>.parse(pkg).version;
+  };
+  that.get_meta_manager = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span>{</span>
+    <span class="hljs-keyword">if</span>(!meta_manager){
+      <span class="hljs-keyword">var</span> config = grunt.config();
+      meta_manager = <span class="hljs-keyword">new</span> meta_factory(cwd, config.meta_dir);
+    }
+    <span class="hljs-keyword">return</span> meta_manager;
+  };
+  that.get_optimizer = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span>{</span>
+    <span class="hljs-keyword">if</span>(!optimizer){
+      <span class="hljs-keyword">var</span> config = grunt.config();
+      optimizer = <span class="hljs-keyword">new</span> optimizer_factory(that.get_meta_manager(), config, grunt);
+    }
+    <span class="hljs-keyword">return</span> optimizer;
+  };
+  that.get_router = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span>{</span>
+    <span class="hljs-keyword">if</span>(!router){
+      <span class="hljs-keyword">var</span> config = grunt.config();
+      router = <span class="hljs-keyword">new</span> router_factory(config.routing);
+    }
+    <span class="hljs-keyword">return</span> router;
+  };
+  that.create_webserver = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(web_paths,ready)</span>{</span>
+    that.get_router().load(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span>{</span>
+      ready(<span class="hljs-keyword">new</span> webserver_factory(that.get_router(),that.get_optimizer(),that.get_meta_manager(),grunt, web_paths));
+    });
+  };
+
+};</pre></div>
+        
+      
+      <div class="fleur">h</div>
+    </div>
+  </div>
+</body>
+</html>

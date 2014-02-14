@@ -23,6 +23,13 @@
               
                 
                 <li>
+                  <a class="source" href="Phantomizer.html">
+                    Phantomizer.js
+                  </a>
+                </li>
+              
+                
+                <li>
                   <a class="source" href="router.html">
                     router.js
                   </a>
@@ -47,144 +54,163 @@
           <div class='highlight'><pre>
 (<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(exports)</span> {</span>
 
-    <span class="hljs-keyword">var</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">"fs"</span>);
-    <span class="hljs-keyword">var</span> http = <span class="hljs-built_in">require</span>(<span class="hljs-string">"http"</span>);
-    <span class="hljs-keyword">var</span> _ = <span class="hljs-built_in">require</span>(<span class="hljs-string">"underscore"</span>);
-    <span class="hljs-keyword">var</span> grunt = <span class="hljs-built_in">require</span>(<span class="hljs-string">"grunt"</span>);
+  <span class="hljs-keyword">var</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">"fs"</span>);
+  <span class="hljs-keyword">var</span> http = <span class="hljs-built_in">require</span>(<span class="hljs-string">"http"</span>);
+  <span class="hljs-keyword">var</span> grunt = <span class="hljs-built_in">require</span>(<span class="hljs-string">"grunt"</span>);
+
+  <span class="hljs-comment">/**
+   * Router collects all static urls
+   * and provides some methods to match request against
+   * the collected urls
+   *
+   * @param routes Array
+   */</span>
+  <span class="hljs-keyword">var</span> router = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(routes)</span>{</span></pre></div>
+        
+      
+        
+        <p>   // an Array of Route Object
+   routes : [
+     {
+       // public properties
+       // there are exclusive
+       template:””,
+       urls_datasource:””,
+       datasource_credentials:””,
+       urls_file:””,
+       url:””,</p>
+<pre><code>   <span class="hljs-comment">// private property</span>
+   urls:[
+     <span class="hljs-comment">// stores the list of urls for that route</span>
+     <span class="hljs-comment">// once it is loaded</span>
+   ]
+ }
+</code></pre><p>   ]</p>
+
+        
+          <div class='highlight'><pre>    <span class="hljs-comment">/**
+     * Loads all Routes urls
+     * and execute the callback
+     *
+     * @param then
+     */</span>
+    <span class="hljs-keyword">this</span>.load = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(then)</span>{</span>
+      <span class="hljs-keyword">if</span>( <span class="hljs-keyword">this</span>.has_loaded || routes.length == <span class="hljs-number">0</span> ){
+        then();
+      }<span class="hljs-keyword">else</span>{
+        <span class="hljs-keyword">var</span> n = <span class="hljs-number">0</span>;
+        <span class="hljs-keyword">var</span> that = <span class="hljs-keyword">this</span>;
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">next</span><span class="hljs-params">(read_urls)</span>{</span>
+          routes[n].urls = read_urls;
+          n++;
+          <span class="hljs-keyword">if</span>( n &lt; routes.length ){
+            read_routing_urls(routes[n],next);
+          }<span class="hljs-keyword">else</span>{
+            that.has_loaded = <span class="hljs-literal">true</span>;
+            then();
+          }
+        }
+        read_routing_urls(routes[<span class="hljs-number">0</span>],next);
+      }
+    }
+    <span class="hljs-keyword">this</span>.has_loaded = <span class="hljs-literal">false</span>;
 
     <span class="hljs-comment">/**
-     * Router collects all static urls
-     * and provides some methods to match request against
-     * the collected urls
+     * Matches an url such /some/url.htm
+     * against the loaded routes urls
+     * Stops on first match found.
      *
-     * @param routes Array
+     * @param absolute_url string /some/url.htm
+     * @returns bool|Route
      */</span>
-    <span class="hljs-keyword">var</span> router = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(routes)</span>{</span>
-
-        <span class="hljs-comment">/*
-</span></pre></div>
-        
-      
-        
-        <p>an Array of Route Object</p>
-
-        
-          <div class='highlight'><pre>        routes : [
-            {</pre></div>
-        
-      
-        
-        <p>public properties
-there are exclusive</p>
-
-        
-          <div class='highlight'><pre>                template:<span class="hljs-string">""</span>,
-                urls_datasource:<span class="hljs-string">""</span>,
-                datasource_credentials:<span class="hljs-string">""</span>,
-                urls_file:<span class="hljs-string">""</span>,
-                url:<span class="hljs-string">""</span>,</pre></div>
-        
-      
-        
-        <p>private property</p>
-
-        
-          <div class='highlight'><pre>                urls:[</pre></div>
-        
-      
-        
-        <p>stores the list of urls for that route
-once it is loaded</p>
-
-        
-          <div class='highlight'><pre>                ]
-            }
-        ]
-         */
-
-        /**
-         * Loads all Routes urls
-         * and execute the callback
-         *
-         * @param then
-         */
-        this.load = function(then){
-            var n = 0;
-            function next(read_urls){
-                routes[n].urls = read_urls;
-                n++;
-                if( n &lt; routes.length ){
-                    read_routing_urls(routes[n],next);
-                }else{
-                    then();
-                }
-            }
-            if( routes.length &gt; 0 ) read_routing_urls(routes[0],next);
-            else then();
+    <span class="hljs-keyword">this</span>.match = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(absolute_url)</span>{</span>
+      <span class="hljs-keyword">if</span>(!<span class="hljs-keyword">this</span>.has_loaded){
+        <span class="hljs-keyword">throw</span> (<span class="hljs-string">'attempting to use a non initialized router'</span>);
+      }
+      <span class="hljs-keyword">for</span>( <span class="hljs-keyword">var</span> n <span class="hljs-keyword">in</span> routes ){
+        <span class="hljs-keyword">var</span> route = routes[n];
+        <span class="hljs-keyword">if</span>(route.urls &amp;&amp;
+          route.urls.indexOf(absolute_url)&gt;-<span class="hljs-number">1</span>){
+          <span class="hljs-keyword">return</span> route;
+        }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(route.template &amp;&amp;
+          route.template == absolute_url){
+          <span class="hljs-keyword">return</span> route;
         }
-        /**
-         * Matches an url such /some/url.htm
-         * against the loaded routes urls
-         * Stops on first match found.
-         *
-         * @param absolute_url string /some/url.htm
-         * @returns bool|Route
-         */
-        this.match = function(absolute_url){
-            for( var n in routes ){
-                var route = routes[n];
-                if(route.urls &amp;&amp;
-                    route.urls.indexOf(absolute_url)&gt;-1){
-                    return route;
-                }else if(route.template &amp;&amp;
-                    route.template == absolute_url){
-                    return route;
-                }
+      }
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    };
+    <span class="hljs-comment">/**
+     * Collect all route urls
+     * into an Array of urls
+     *
+     * @param filter_fn
+     * @returns {Array}
+     */</span>
+    <span class="hljs-keyword">this</span>.collect_urls = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(filter_fn)</span>{</span>
+      <span class="hljs-keyword">if</span>(!<span class="hljs-keyword">this</span>.has_loaded){
+        <span class="hljs-keyword">throw</span> (<span class="hljs-string">'attempting to use a non initialized router'</span>);
+      }
+      <span class="hljs-keyword">var</span> urls = [];
+      <span class="hljs-keyword">for</span>( <span class="hljs-keyword">var</span> n <span class="hljs-keyword">in</span> routes ){
+        <span class="hljs-keyword">var</span> route = routes[n];
+        <span class="hljs-keyword">if</span>(route.urls &amp;&amp; route.urls.length &gt; <span class="hljs-number">0</span>){
+          <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> t <span class="hljs-keyword">in</span> route.urls){
+            <span class="hljs-keyword">if</span>( !filter_fn ){
+              urls.push(route.urls[t]);
+            }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(filter_fn(route)){
+              urls.push(route.urls[t]);
             }
-            return false;
-        };
-        /**
-         * Collect all route urls
-         * into an Array of urls
-         *
-         * @returns {Array}
-         */
-        this.collect_urls = function(){
-            var urls = [];
-            for( var n in routes ){
-                var route = routes[n];
-                if(route.urls &amp;&amp; route.urls.length &gt; 0){
-                    for(var t in route.urls) urls.push(route.urls[t]);
-                }else if(route.template){
-                    urls.push(route.template);
-                }
-            }
-            return urls;
-        };
-        /**
-         * Collect all route urls
-         * into an Array of object
-         * [
-         *  {   url : string,
+          }
+
+        }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(route.template){
+          <span class="hljs-keyword">if</span>( !filter_fn ){
+            urls.push(route.template);
+          }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(filter_fn(route)){
+            urls.push(route.template);
+          }
+
+        }
+      }
+      <span class="hljs-keyword">return</span> urls;
+    };
+    <span class="hljs-comment">/**
+     * Collect all route urls
+     * into an Array of object
+     * [
+     *  {   url : string,
          *      meta: Route
          *  }
-         * ]
-         *
-         * @returns {Array}
-         */
-        this.collect_meta_urls = function(){
-            var urls = [];
-            for( var n in routes ){
-                var route = routes[n];
-                if(route.urls &amp;&amp; route.urls.length &gt; 0){
-                    for(var t in route.urls) urls.push({url:route.urls[t], meta:route});
-                }else if(route.template){
-                    urls.push({url:route.template, meta:route});
-                }
+     * ]
+     *
+     * @returns {Array}
+     */</span>
+    <span class="hljs-keyword">this</span>.collect_meta_urls = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(filter_fn)</span>{</span>
+      <span class="hljs-keyword">if</span>(!<span class="hljs-keyword">this</span>.has_loaded){
+        <span class="hljs-keyword">throw</span> (<span class="hljs-string">'attempting to use a non initialized router'</span>);
+      }
+      <span class="hljs-keyword">var</span> urls = [];
+      <span class="hljs-keyword">for</span>( <span class="hljs-keyword">var</span> n <span class="hljs-keyword">in</span> routes ){
+        <span class="hljs-keyword">var</span> route = routes[n];
+        <span class="hljs-keyword">if</span>(route.urls &amp;&amp; route.urls.length &gt; <span class="hljs-number">0</span>){
+          <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> t <span class="hljs-keyword">in</span> route.urls){
+            <span class="hljs-keyword">if</span>( !filter_fn ){
+              urls.push({url:route.urls[t], meta:route});
+            }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(filter_fn(route)){
+              urls.push({url:route.urls[t], meta:route});
             }
-            return urls;
-        };
-    };</pre></div>
+          }
+        }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(route.template){
+          <span class="hljs-keyword">if</span>( !filter_fn ){
+            urls.push({url:route.template, meta:route});
+          }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(filter_fn(route)){
+            urls.push({url:route.template, meta:route});
+          }
+
+        }
+      }
+      <span class="hljs-keyword">return</span> urls;
+    };
+  };</pre></div>
         
       
         
@@ -195,134 +221,134 @@ once it is loaded</p>
         
         
         
-          <div class='highlight'><pre>    <span class="hljs-comment">/**
-     * Given a route,
-     * Identify the kind of datasource (file|string|url)
-     * fetch the content and call the callback
-     *
-     * @param route_options object
-     * @param then callback
-     */</span>
-    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">read_routing_urls</span><span class="hljs-params">(route_options,then)</span>{</span>
-        <span class="hljs-keyword">var</span> urls = [];</pre></div>
+          <div class='highlight'><pre>  <span class="hljs-comment">/**
+   * Given a route,
+   * Identify the kind of datasource (file|string|url)
+   * fetch the content and call the callback
+   *
+   * @param route_options object
+   * @param then callback
+   */</span>
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">read_routing_urls</span><span class="hljs-params">(route_options,then)</span>{</span>
+    <span class="hljs-keyword">var</span> urls = [];</pre></div>
         
       
         
         <p>read urls from a remote http source</p>
 
         
-          <div class='highlight'><pre>        <span class="hljs-keyword">if</span> (route_options.urls_datasource){
-            grunt.log.writeln(<span class="hljs-string">"Reading urls from URL "</span>+route_options.urls_datasource);
-            read_url(route_options, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(status,content)</span>{</span>
-                urls = <span class="hljs-built_in">JSON</span>.parse(content);</pre></div>
+          <div class='highlight'><pre>    <span class="hljs-keyword">if</span> (route_options.urls_datasource){
+      grunt.log.writeln(<span class="hljs-string">"Reading urls from URL "</span>+route_options.urls_datasource);
+      read_url(route_options, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(status,content)</span>{</span>
+        urls = <span class="hljs-built_in">JSON</span>.parse(content);</pre></div>
         
       
         
         <p>if the response is in the form {data:[/<em> absolute urls : /some/url.htm </em>/]}</p>
 
         
-          <div class='highlight'><pre>                <span class="hljs-keyword">if</span>( urls.data &amp;&amp; toString.call(urls.data) == <span class="hljs-string">'[object Array]'</span> ){
-                    urls = urls.data;
-                }</pre></div>
+          <div class='highlight'><pre>        <span class="hljs-keyword">if</span>( urls.data &amp;&amp; toString.call(urls.data) == <span class="hljs-string">'[object Array]'</span> ){
+          urls = urls.data;
+        }</pre></div>
         
       
         
         <p>otherwise, the response is in the form [/<em> absolute urls : /some/url.htm </em>/]</p>
 
         
-          <div class='highlight'><pre>                then(urls);
-            });
-        }<span class="hljs-keyword">else</span>{</pre></div>
+          <div class='highlight'><pre>        then(urls);
+      });
+    }<span class="hljs-keyword">else</span>{</pre></div>
         
       
         
         <p>source is a local file</p>
 
         
-          <div class='highlight'><pre>            <span class="hljs-keyword">if</span> (route_options.urls_file){
-                grunt.log.writeln(<span class="hljs-string">"Reading urls from file "</span>+route_options.urls_file);
-                urls = fs.readFileSync(route_options.urls_file);
-                urls = <span class="hljs-built_in">JSON</span>.parse(urls);</pre></div>
+          <div class='highlight'><pre>      <span class="hljs-keyword">if</span> (route_options.urls_file){
+        grunt.log.writeln(<span class="hljs-string">"Reading urls from file "</span>+route_options.urls_file);
+        urls = fs.readFileSync(route_options.urls_file);
+        urls = <span class="hljs-built_in">JSON</span>.parse(urls);</pre></div>
         
       
         
         <p>source is a built in Array of absolute urls : /some/url.htm</p>
 
         
-          <div class='highlight'><pre>            }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( route_options.urls ){
-                urls = route_options.urls;
-                grunt.log.writeln(<span class="hljs-string">"Reading urls inlined from options"</span>);</pre></div>
+          <div class='highlight'><pre>      }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( route_options.urls ){
+        urls = route_options.urls;
+        grunt.log.writeln(<span class="hljs-string">"Reading urls inlined from options"</span>);</pre></div>
         
       
         
         <p>source is a built in String, a absolute url : /some/url.htm</p>
 
         
-          <div class='highlight'><pre>            }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (route_options.url){
-                urls = [route_options.url];
-                grunt.log.writeln(<span class="hljs-string">"Reading urls inlined from options"</span>);
-            }
-            then(urls);
-        }
+          <div class='highlight'><pre>      }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (route_options.url){
+        urls = [route_options.url];
+        grunt.log.writeln(<span class="hljs-string">"Reading urls inlined from options"</span>);
+      }
+      then(urls);
+    }
+  }
+
+  <span class="hljs-comment">/**
+   * Reads a remote url
+   * and apply callback when done
+   *
+   * @param route Route
+   * @param then callback
+   */</span>
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">read_url</span><span class="hljs-params">(route,then)</span>{</span>
+    <span class="hljs-keyword">var</span> request = <span class="hljs-built_in">require</span>(<span class="hljs-string">"request"</span>);
+
+    <span class="hljs-keyword">var</span> url = route.urls_datasource;
+    <span class="hljs-keyword">var</span> options = {};
+    <span class="hljs-keyword">if</span>( route.datasource_credentials ){
+
+      <span class="hljs-keyword">var</span> auth_file = route.datasource_credentials.auth_file || <span class="hljs-string">""</span>;
+      <span class="hljs-keyword">var</span> user_env_var = route.datasource_credentials.user_env_var || <span class="hljs-string">""</span>;
+      <span class="hljs-keyword">var</span> pwd_env_var = route.datasource_credentials.pwd_env_var || <span class="hljs-string">""</span>;
+      <span class="hljs-keyword">var</span> user_in = route.datasource_credentials.user || <span class="hljs-string">""</span>;
+      <span class="hljs-keyword">var</span> pwd_in = route.datasource_credentials.pwd || <span class="hljs-string">""</span>;
+
+      <span class="hljs-keyword">if</span>( auth_file !== <span class="hljs-string">""</span> ){
+        console.log(<span class="hljs-string">"using auth_file "</span> + auth_file);
+        <span class="hljs-keyword">var</span> c = grunt.file.read(auth_file).trim().split(<span class="hljs-string">":"</span>);
+        options = {
+          auth:{
+            <span class="hljs-string">'user'</span>: c[<span class="hljs-number">0</span>],
+            <span class="hljs-string">'pass'</span>: c[<span class="hljs-number">1</span>],
+            <span class="hljs-string">'sendImmediately'</span>: <span class="hljs-literal">false</span>
+          }
+        };
+      }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( user_env_var
+        +pwd_env_var !== <span class="hljs-string">""</span> ){
+        console.log(<span class="hljs-string">"using env var auth "</span> + user_env_var+<span class="hljs-string">" "</span>+pwd_env_var);
+        options = {
+          auth:{
+            <span class="hljs-string">'user'</span>: process.env[user_env_var],
+            <span class="hljs-string">'pass'</span>: process.env[pwd_env_var],
+            <span class="hljs-string">'sendImmediately'</span>: <span class="hljs-literal">false</span>
+          }
+        };
+      }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( user_in
+        +pwd_in !== <span class="hljs-string">""</span> ){
+        console.log(<span class="hljs-string">"using inlined configuration auth."</span>);
+        options = {
+          auth:{
+            <span class="hljs-string">'user'</span>: user_in,
+            <span class="hljs-string">'pass'</span>: pwd_in,
+            <span class="hljs-string">'sendImmediately'</span>: <span class="hljs-literal">false</span>
+          }
+        };
+      }
     }
 
-    <span class="hljs-comment">/**
-     * Reads a remote url
-     * and apply callback when done
-     *
-     * @param route Route
-     * @param then callback
-     */</span>
-    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">read_url</span><span class="hljs-params">(route,then)</span>{</span>
-        <span class="hljs-keyword">var</span> request = <span class="hljs-built_in">require</span>(<span class="hljs-string">"request"</span>);
-
-        <span class="hljs-keyword">var</span> url = route.urls_datasource;
-        <span class="hljs-keyword">var</span> options = {};
-        <span class="hljs-keyword">if</span>( route.datasource_credentials ){
-
-            <span class="hljs-keyword">var</span> auth_file = route.datasource_credentials.auth_file || <span class="hljs-string">""</span>;
-            <span class="hljs-keyword">var</span> user_env_var = route.datasource_credentials.user_env_var || <span class="hljs-string">""</span>;
-            <span class="hljs-keyword">var</span> pwd_env_var = route.datasource_credentials.pwd_env_var || <span class="hljs-string">""</span>;
-            <span class="hljs-keyword">var</span> user_in = route.datasource_credentials.user || <span class="hljs-string">""</span>;
-            <span class="hljs-keyword">var</span> pwd_in = route.datasource_credentials.pwd || <span class="hljs-string">""</span>;
-
-            <span class="hljs-keyword">if</span>( auth_file !== <span class="hljs-string">""</span> ){
-                console.log(<span class="hljs-string">"using auth_file "</span> + auth_file);
-                <span class="hljs-keyword">var</span> c = grunt.file.read(auth_file).trim().split(<span class="hljs-string">":"</span>);
-                options = {
-                    auth:{
-                        <span class="hljs-string">'user'</span>: c[<span class="hljs-number">0</span>],
-                        <span class="hljs-string">'pass'</span>: c[<span class="hljs-number">1</span>],
-                        <span class="hljs-string">'sendImmediately'</span>: <span class="hljs-literal">false</span>
-                    }
-                };
-            }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( user_env_var
-                +pwd_env_var !== <span class="hljs-string">""</span> ){
-                console.log(<span class="hljs-string">"using env var auth "</span> + user_env_var+<span class="hljs-string">" "</span>+pwd_env_var);
-                options = {
-                    auth:{
-                        <span class="hljs-string">'user'</span>: process.env[user_env_var],
-                        <span class="hljs-string">'pass'</span>: process.env[pwd_env_var],
-                        <span class="hljs-string">'sendImmediately'</span>: <span class="hljs-literal">false</span>
-                    }
-                };
-            }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( user_in
-                +pwd_in !== <span class="hljs-string">""</span> ){
-                console.log(<span class="hljs-string">"using inlined configuration auth."</span>);
-                options = {
-                    auth:{
-                        <span class="hljs-string">'user'</span>: user_in,
-                        <span class="hljs-string">'pass'</span>: pwd_in,
-                        <span class="hljs-string">'sendImmediately'</span>: <span class="hljs-literal">false</span>
-                    }
-                };
-            }
-        }
-
-        request(url, options, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(error, response, body)</span> {</span>
-            <span class="hljs-keyword">if</span>( error ){
-                then(<span class="hljs-literal">false</span>,error);
-            }<span class="hljs-keyword">else</span>{</pre></div>
+    request(url, options, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(error, response, body)</span> {</span>
+      <span class="hljs-keyword">if</span>( error ){
+        then(<span class="hljs-literal">false</span>,error);
+      }<span class="hljs-keyword">else</span>{</pre></div>
         
       
         
@@ -331,21 +357,21 @@ once it is loaded</p>
 <p>needs to strip it out</p>
 
         
-          <div class='highlight'><pre>                <span class="hljs-keyword">if</span>( body.match(<span class="hljs-regexp">/^(\d+\s)/i</span>) &amp;&amp; body.match(<span class="hljs-regexp">/\S+\s+\d+\s+$/i</span>) ){
-                    body = body.replace(<span class="hljs-regexp">/^(\d+\s)/i</span>,<span class="hljs-string">""</span>)
-                    body = body.replace(<span class="hljs-regexp">/(\S+)\s+\d+\s+$/i</span>,<span class="hljs-string">"$1"</span>)
-                }
-                then(<span class="hljs-literal">true</span>,body);
-            }
-        })
-    }</pre></div>
+          <div class='highlight'><pre>        <span class="hljs-keyword">if</span>( body.match(<span class="hljs-regexp">/^(\d+\s)/i</span>) &amp;&amp; body.match(<span class="hljs-regexp">/\S+\s+\d+\s+$/i</span>) ){
+          body = body.replace(<span class="hljs-regexp">/^(\d+\s)/i</span>,<span class="hljs-string">""</span>)
+          body = body.replace(<span class="hljs-regexp">/(\S+)\s+\d+\s+$/i</span>,<span class="hljs-string">"$1"</span>)
+        }
+        then(<span class="hljs-literal">true</span>,body);
+      }
+    })
+  }</pre></div>
         
       
         
         <p>Expose the constructor function.</p>
 
         
-          <div class='highlight'><pre>    exports.router = router;
+          <div class='highlight'><pre>  exports.router = router;
 }(<span class="hljs-keyword">typeof</span> exports === <span class="hljs-string">'object'</span> &amp;&amp; exports || <span class="hljs-keyword">this</span>));</pre></div>
         
       
