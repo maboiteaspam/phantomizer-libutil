@@ -6,6 +6,7 @@ module.exports = function(grunt) {
     docco: {
       debug: {
         src: [
+          'lib/Phantomizer.js',
           'lib/router.js',
           'lib/webserver.js'
         ],
