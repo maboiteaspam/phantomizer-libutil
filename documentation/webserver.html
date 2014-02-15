@@ -85,10 +85,7 @@
         <p>Server side Bandwidth and congestion manager</p>
 
         
-          <div class='highlight'><pre>    <span class="hljs-keyword">var</span> min_congestion = <span class="hljs-number">0</span>;
-    <span class="hljs-keyword">var</span> max_congestion = <span class="hljs-number">0</span>;
-    <span class="hljs-keyword">var</span> cur_bdw = <span class="hljs-number">0</span>;
-    <span class="hljs-keyword">var</span> deliverer = <span class="hljs-keyword">new</span> delivery_queue();</pre></div>
+          <div class='highlight'><pre>    <span class="hljs-keyword">var</span> deliverer = <span class="hljs-keyword">new</span> delivery_queue();</pre></div>
         
       
         
@@ -135,11 +132,7 @@
     <span class="hljs-keyword">var</span> write_handler = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span>{</span>
       <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(code, headers, buf, res)</span>{</span>
         res.writeHead(code, headers);
-
-        <span class="hljs-keyword">var</span> congestion = <span class="hljs-built_in">Math</span>.floor((<span class="hljs-built_in">Math</span>.random()*max_congestion)+min_congestion);
-        setTimeout(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span>{</span>
-          deliverer.enqueue(buf, res);
-        }, congestion);
+        deliverer.enqueue(buf, res);
       };
     };</pre></div>
         
@@ -186,6 +179,38 @@ useful for ajax mocking purpose</p>
         
       
         
+        <p><strong>dashboard management</strong></p>
+
+        
+          <div class='highlight'><pre>    <span class="hljs-comment">/**
+     * @param req
+     * @param res
+     * @param next
+     */</span>
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">enable_dashboard</span><span class="hljs-params">(req, res)</span>{</span>
+      dashboard_enabled = <span class="hljs-literal">true</span>;
+      res.writeHead(<span class="hljs-number">200</span>, {
+        <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/html'</span>
+      });
+      res.end( <span class="hljs-string">"ok"</span> );
+    }
+    app.get(<span class="hljs-string">"/enable_dashboard"</span>, enable_dashboard);
+    <span class="hljs-comment">/**
+     * @param req
+     * @param res
+     * @param next
+     */</span>
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">disable_dashboard</span><span class="hljs-params">(req, res)</span>{</span>
+      dashboard_enabled = <span class="hljs-literal">false</span>;
+      res.writeHead(<span class="hljs-number">200</span>, {
+        <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/html'</span>
+      });
+      res.end( <span class="hljs-string">"ok"</span> );
+    }
+    app.get(<span class="hljs-string">"/disable_dashboard"</span>, disable_dashboard);</pre></div>
+        
+      
+        
         <p><strong>Latency management</strong></p>
 
         
@@ -202,11 +227,11 @@ useful for ajax mocking purpose</p>
      * @param next
      */</span>
     <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">max_latency_getter</span><span class="hljs-params">(req, res)</span>{</span>
-      <span class="hljs-keyword">var</span> headers = {
+
+      res.writeHead(<span class="hljs-number">200</span>, {
         <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/html'</span>
-      };
-      res.writeHead(<span class="hljs-number">200</span>, headers);
-      res.end(max_congestion+<span class="hljs-string">"ms"</span>);
+      });
+      res.end( deliverer.get_congestion()[<span class="hljs-number">1</span>] );
     }
     app.get(<span class="hljs-string">"/stryke_get_max_congestion"</span>, max_latency_getter);
 
@@ -223,7 +248,8 @@ useful for ajax mocking purpose</p>
      */</span>
     <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">max_latency_setter</span><span class="hljs-params">(req, res)</span>{</span>
 
-      max_congestion = <span class="hljs-built_in">parseInt</span>( req.param(<span class="hljs-string">"congestion"</span>) );
+      deliverer.set_max_congestion( req.param(<span class="hljs-string">"congestion"</span>) );
+      console.log(<span class="hljs-string">"Set maximum latency to "</span>+req.param(<span class="hljs-string">"congestion"</span>) );
 
       res.writeHead(<span class="hljs-number">200</span>, {
         <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/html'</span>
@@ -245,11 +271,10 @@ useful for ajax mocking purpose</p>
      * @param next
      */</span>
     <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">min_latency_getter</span><span class="hljs-params">(req, res)</span>{</span>
-      <span class="hljs-keyword">var</span> headers = {
+      res.writeHead(<span class="hljs-number">200</span>, {
         <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/html'</span>
-      };
-      res.writeHead(<span class="hljs-number">200</span>, headers);
-      res.end(min_congestion+<span class="hljs-string">"ms"</span>);
+      });
+      res.end( deliverer.get_congestion()[<span class="hljs-number">0</span>] );
     }
     app.get(<span class="hljs-string">"/get_stryke_min_congestion"</span>, min_latency_getter);
 
@@ -267,15 +292,15 @@ useful for ajax mocking purpose</p>
      */</span>
     <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">min_latency_setter</span><span class="hljs-params">(req, res)</span>{</span>
 
-      min_congestion = <span class="hljs-built_in">parseInt</span>( req.param(<span class="hljs-string">"congestion"</span>) );
+      deliverer.set_min_congestion( req.param(<span class="hljs-string">"congestion"</span>) );
+      console.log(<span class="hljs-string">"Set minimum latency to "</span>+req.param(<span class="hljs-string">"congestion"</span>));
 
-      <span class="hljs-keyword">var</span> headers = {
+      res.writeHead(<span class="hljs-number">200</span>, {
         <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/html'</span>
-      };
-      res.writeHead(<span class="hljs-number">200</span>, headers);
+      });
       res.end(<span class="hljs-string">"ok"</span>);
     }
-    app.get(<span class="hljs-string">"/stryke_min_congestion"</span>, min_latency_setter);</pre></div>
+    app.get(<span class="hljs-string">"/stryke_min_congestion/:congestion"</span>, min_latency_setter);</pre></div>
         
       
         
@@ -295,11 +320,10 @@ useful for ajax mocking purpose</p>
      * @param next
      */</span>
     <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">bdw_getter</span><span class="hljs-params">(req, res, next)</span>{</span>
-      <span class="hljs-keyword">var</span> headers = {
+      res.writeHead(<span class="hljs-number">200</span>, {
         <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/html'</span>
-      };
-      res.writeHead(<span class="hljs-number">200</span>, headers);
-      res.end(cur_bdw+<span class="hljs-string">"k"</span>);
+      });
+      res.end( deliverer.get_bdw() );
     }
     app.get(<span class="hljs-string">"/stryke_get_bdw"</span>, bdw_getter);
 
@@ -316,11 +340,12 @@ useful for ajax mocking purpose</p>
      */</span>
     <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">bdw_setter</span><span class="hljs-params">(req, res)</span>{</span>
 
-      cur_bdw = <span class="hljs-built_in">parseInt</span>( req.param(<span class="hljs-string">"bdw"</span>) );
-      <span class="hljs-keyword">var</span> headers = {
+      deliverer.set_bdw(req.param(<span class="hljs-string">"bdw"</span>));
+      console.log(<span class="hljs-string">"Set bandwidth to "</span>+req.param(<span class="hljs-string">"bdw"</span>));
+
+      res.writeHead(<span class="hljs-number">200</span>, {
         <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/html'</span>
-      };
-      res.writeHead(<span class="hljs-number">200</span>, headers);
+      });
       res.end(<span class="hljs-string">"ok"</span>);
     }
     app.get(<span class="hljs-string">"/stryke_bdw/:bdw"</span>, bdw_setter);</pre></div>
@@ -1002,18 +1027,12 @@ to tell webclient to stop display sooner</p>
       }
 
       <span class="hljs-keyword">var</span> inject = <span class="hljs-literal">false</span>;
-      <span class="hljs-keyword">if</span>( (req.query.device || req.query.spec_files) ){
-        inject = <span class="hljs-literal">true</span>;
-      }<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>( !req.query.no_dashboard &amp;&amp; dashboard_enabled ){
+      <span class="hljs-keyword">if</span>( (req.query.device || req.query.spec_files || dashboard_enabled ) ){
         inject = <span class="hljs-literal">true</span>;
       }
 
       <span class="hljs-keyword">if</span>( globals_injected ){
         buf = buf.replace(<span class="hljs-string">"&lt;/head&gt;"</span>,<span class="hljs-string">"&lt;script&gt;window.phantomizer_globals="</span>+<span class="hljs-built_in">JSON</span>.stringify(globals_injected)+<span class="hljs-string">"&lt;/script&gt;&lt;/head&gt;"</span>);
-      }
-
-      <span class="hljs-keyword">if</span>( inject &amp;&amp; req.query.no_dashboard ){
-        buf = buf.replace(<span class="hljs-string">"&lt;/head&gt;"</span>,<span class="hljs-string">"&lt;script&gt;window.no_dashboard=true;&lt;/script&gt;&lt;/head&gt;"</span>);
       }
 
       <span class="hljs-keyword">if</span>( inject ){
